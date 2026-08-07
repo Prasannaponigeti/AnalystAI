@@ -3,7 +3,7 @@ from modules.upload import upload_dataset
 from modules.profiling import show_data_profile
 from modules.dashboard import show_business_kpis
 from modules.ai import generate_business_insights
-from modules.report import download_csv, download_excel
+from modules.report import download_csv, download_excel   # ✅ using report.py
 import plotly.express as px
 import pandas as pd
 
@@ -37,12 +37,17 @@ st.header("📁 Upload Dataset")
 
 df = upload_dataset()
 
+# ✅ Demo data if no upload
+if df is None:
+    df = pd.read_csv("https://raw.githubusercontent.com/plotly/datasets/master/supermarket_sales.csv")
+    st.info("📊 Showing demo dataset. Upload your own file to explore.")
+
 # -------------------------------
 # If Data Available
 # -------------------------------
 if df is not None:
 
-    st.success("✅ Dataset uploaded successfully!")
+    st.success("✅ Dataset ready!")
 
     # Filter
     selected_city = st.selectbox(
@@ -56,7 +61,7 @@ if df is not None:
         filtered_df = df
 
     # -------------------------------
-    # DASHBOARD PAGE
+    # DASHBOARD
     # -------------------------------
     if page == "Dashboard":
 
@@ -76,10 +81,10 @@ if df is not None:
         top_product = filtered_df.groupby("Product line")["Total"].sum().idxmax()
 
         st.success(f"""
-        📌 Total Sales: {total_sales:.2f}
-        📌 Average Sales: {avg_sales:.2f}
-        📌 Top City: {top_city}
-        📌 Top Product: {top_product}
+        📌 Total Sales: {total_sales:.2f}  
+        📌 Average Sales: {avg_sales:.2f}  
+        📌 Top City: {top_city}  
+        📌 Top Product: {top_product}  
         """)
 
         st.markdown("---")
@@ -87,21 +92,25 @@ if df is not None:
         # Charts
         st.subheader("📈 Sales by City")
         city_sales = filtered_df.groupby("City")["Total"].sum().reset_index()
-        st.plotly_chart(px.bar(city_sales, x="City", y="Total", color="City"), use_container_width=True)
+        fig1 = px.bar(city_sales, x="City", y="Total", color="City")
+        st.plotly_chart(fig1, use_container_width=True, key="chart1")
 
         st.subheader("📊 Product Sales")
         product_sales = filtered_df.groupby("Product line")["Total"].sum().reset_index()
-        st.plotly_chart(px.bar(product_sales, x="Product line", y="Total", color="Product line"), use_container_width=True)
+        fig2 = px.bar(product_sales, x="Product line", y="Total", color="Product line")
+        st.plotly_chart(fig2, use_container_width=True, key="chart2")
 
         st.subheader("💳 Payment Distribution")
         payment_data = filtered_df.groupby("Payment")["Total"].sum().reset_index()
-        st.plotly_chart(px.pie(payment_data, names="Payment", values="Total"), use_container_width=True)
+        fig3 = px.pie(payment_data, names="Payment", values="Total")
+        st.plotly_chart(fig3, use_container_width=True, key="chart3")
 
         st.subheader("📈 Sales Trend")
         trend_df = filtered_df.copy()
         trend_df["Date"] = pd.to_datetime(trend_df["Date"])
         trend = trend_df.groupby("Date")["Total"].sum().reset_index()
-        st.plotly_chart(px.line(trend, x="Date", y="Total"), use_container_width=True)
+        fig4 = px.line(trend, x="Date", y="Total")
+        st.plotly_chart(fig4, use_container_width=True, key="chart4")
 
         st.markdown("---")
 
@@ -122,32 +131,37 @@ if df is not None:
             st.write(insights)
 
     # -------------------------------
-    # REPORTS PAGE
+    # REPORTS
     # -------------------------------
-    elif page == "Report":
+    elif page == "Reports":
 
-       st.title("📄 Reports")
+        st.title("📄 Reports")
 
-    # Download buttons
-    download_csv(filtered_df)
-    download_excel(filtered_df)
+        # Download buttons
+        download_csv(filtered_df)
+        download_excel(filtered_df)
 
-    st.markdown("---")
+        st.markdown("---")
 
-    st.subheader("📊 Sales by City")
+        st.subheader("📊 Sales by City")
+        city_sales = filtered_df.groupby("City")["Total"].sum().reset_index()
+        fig1 = px.bar(city_sales, x="City", y="Total", color="City")
+        st.plotly_chart(fig1, use_container_width=True, key="r_chart1")
 
-    city_sales = filtered_df.groupby("City")["Total"].sum().reset_index()
-    fig1 = px.bar(city_sales, x="City", y="Total", color="City")
-    st.plotly_chart(fig1, use_container_width=True, key = "chart1")
+        st.subheader("📊 Sales by Product")
+        product_sales = filtered_df.groupby("Product line")["Total"].sum().reset_index()
+        fig2 = px.bar(product_sales, x="Product line", y="Total", color="Product line")
+        st.plotly_chart(fig2, use_container_width=True, key="r_chart2")
 
-    st.subheader("📊 Sales by Product")
+        st.subheader("💳 Payment Distribution")
+        payment_data = filtered_df.groupby("Payment")["Total"].sum().reset_index()
+        fig3 = px.pie(payment_data, names="Payment", values="Total")
+        st.plotly_chart(fig3, use_container_width=True, key="r_chart3")
 
-    product_sales = filtered_df.groupby("Product line")["Total"].sum().reset_index()
-    fig2 = px.bar(product_sales, x="Product line", y="Total", color="Product line")
-    st.plotly_chart(fig2, use_container_width=True,key="chart2")
+    # -------------------------------
+    # ABOUT
+    # -------------------------------
+    elif page == "About":
 
-    st.subheader("💳 Payment Distribution")
-
-    payment_data = filtered_df.groupby("Payment")["Total"].sum().reset_index()
-    fig3 = px.pie(payment_data, names="Payment", values="Total")
-    st.plotly_chart(fig3, use_container_width=True, key="chart3") 
+        st.title("ℹ️ About AnalystAI")
+        st.write("This is an AI-powered Business Intelligence dashboard built using Streamlit.")
